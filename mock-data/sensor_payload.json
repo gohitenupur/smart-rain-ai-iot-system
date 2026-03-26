@@ -1,0 +1,10 @@
+{
+  "deviceId": "esp32-lab-01",
+  "deviceName": "Lab Roof Sensor",
+  "location": "Building A Roof",
+  "temperatureC": 23.7,
+  "humidityPct": 88.2,
+  "pressureHpa": 1001.4,
+  "rainAnalog": 790,
+  "capturedAt": "2026-03-26T09:30:00.000Z"
+}
