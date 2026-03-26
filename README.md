@@ -14,7 +14,8 @@ smart-rain-ai-iot-system/
 │   │   ├── routes/
 │   │   ├── services/
 │   │   └── server.js
-│   └── tests/
+│   ├── scripts/
+│   └── Dockerfile
 ├── ai/
 │   ├── data/
 │   ├── models/
@@ -22,18 +23,44 @@ smart-rain-ai-iot-system/
 │   ├── train.py
 │   └── inference.py
 ├── frontend/
-│   └── src/
+│   ├── src/
+│   ├── public/
+│   └── Dockerfile
 ├── database/
 │   └── schema.sql
 ├── docs/
 │   └── API.md
 ├── iot-simulator/
 │   └── send_mock_data.js
+├── docker-compose.yml
 └── mock-data/
     └── sensor_payload.json
 ```
 
-## 2) Setup
+## 2) Quick Start with Docker (Recommended)
+
+> This is the recommended path to run everything with one command.
+
+```bash
+docker compose up --build
+```
+
+Services:
+- Frontend: `http://localhost:3000`
+- Backend API: `http://localhost:4000/api/v1`
+- PostgreSQL: `localhost:5432`
+
+Notes:
+- DB schema auto-runs from `database/schema.sql`.
+- Backend startup script auto-trains AI models if model files do not exist.
+
+Stop all services:
+
+```bash
+docker compose down
+```
+
+## 3) Local Setup (Manual)
 
 ### Database
 1. Create PostgreSQL database named `smart_rain`.
@@ -66,7 +93,7 @@ npm install
 npm start
 ```
 
-## 3) Backend Environment Variables
+## 4) Backend Environment Variables
 
 Create `backend/.env`:
 
@@ -82,7 +109,7 @@ DB_NAME=smart_rain
 PYTHON_EXECUTABLE=python3
 ```
 
-## 4) Feature Coverage
+## 5) Feature Coverage
 - Real-time sensor ingestion API with validation.
 - AI rain detection (classification) + rainfall forecast (1h/2h/3h).
 - Dynamic threshold from DB (`system_settings`) — no hardcoded threshold.
@@ -92,14 +119,14 @@ PYTHON_EXECUTABLE=python3
 - IoT mock data simulator script.
 - Unit tests for API and AI inference.
 
-## 5) Development Strategy (Simple First)
+## 6) Development Strategy (Simple First)
 1. Run DB + backend + `/sensors/ingest`.
 2. Train and connect AI model.
 3. Start dashboard.
 4. Add simulator + automation.
 5. Expand to hardware (ESP32) and notifications (Firebase/Blynk).
 
-## 6) Deployment Path
+## 7) Deployment Path
 - Backend: Render / Railway
 - Frontend: Vercel
 - DB: Supabase / Neon
