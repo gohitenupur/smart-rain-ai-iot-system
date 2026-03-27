@@ -13,7 +13,8 @@ router.get('/health', (req, res) => res.json({ status: 'ok' }));
 router.post('/auth/register', validate(registerSchema), register);
 router.post('/auth/login', validate(loginSchema), login);
 
-router.post('/sensors/ingest', authenticate, authorize('admin', 'user'), validate(sensorSchema), ingestSensorData);
+// IoT devices send sensor data without authentication (they use device_id for identification)
+router.post('/sensors/ingest', validate(sensorSchema), ingestSensorData);
 router.get('/sensors/live', authenticate, authorize('admin', 'user'), getLiveData);
 
 router.put('/settings', authenticate, authorize('admin'), validate(settingSchema), updateSetting);

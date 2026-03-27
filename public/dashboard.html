@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Rain Detection System</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.7.7/axios.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            padding: 30px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 20px;
+        }
+
+        h1 {
+            color: #333;
+            font-size: 2.5em;
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .status {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .status-card {
+            flex: 1;
+            min-width: 200px;
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .status-card h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 0.9em;
+            text-transform: uppercase;
+        }
+
+        .status-value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+
+        .status-badge.active {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-badge.inactive {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .controls {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        button {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.95em;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #e9ecef;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #dee2e6;
+        }
+
+        .data-section {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .data-section h2 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .data-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+        }
+
+        .data-item {
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+            border: 1px solid #e9ecef;
+        }
+
+        .data-label {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+        }
+
+        .data-value {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .alert-box {
+            background: #fff3cd;
+            border: 1px solid #ffeeba;
+            color: #856404;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+
+        .alert-box.success {
+            background: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+
+        .alert-box.error {
+            background: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+
+        .loading {
+            text-align: center;
+            color: #666;
+            padding: 20px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 10px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #e9ecef;
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .api-status {
+            padding: 10px 15px;
+            border-radius: 4px;
+            margin-top: 10px;
+            font-size: 0.85em;
+        }
+
+        .api-status.connected {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .api-status.disconnected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>☔ Smart Rain Detection System</h1>
+            <p class="subtitle">Real-time IoT Monitoring & AI Predictions</p>
+        </header>
+
+        <div id="apiStatus" class="api-status disconnected">
+            🔌 Connecting to Backend...
+        </div>
+
+        <div class="status">
+            <div class="status-card">
+                <h3>Temperature</h3>
+                <div class="status-value" id="temperature">--°C</div>
+            </div>
+            <div class="status-card">
+                <h3>Humidity</h3>
+                <div class="status-value" id="humidity">--%</div>
+            </div>
+            <div class="status-card">
+                <h3>Pressure</h3>
+                <div class="status-value" id="pressure">-- hPa</div>
+            </div>
+            <div class="status-card">
+                <h3>Rain Detection</h3>
+                <div class="status-value" id="rainStatus">-- %</div>
+                <span class="status-badge" id="rainBadge">No Data</span>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn-primary" onclick="loadLatestData()">🔄 Refresh Data</button>
+            <button class="btn-primary" onclick="sendTestData()">📤 Send Test Data</button>
+            <button class="btn-secondary" onclick="checkHealth()">🏥 Check Health</button>
+            <button class="btn-secondary" onclick="clearData()">🗑️ Clear</button>
+        </div>
+
+        <div id="alertBox" style="display: none;"></div>
+
+        <div class="data-section">
+            <h2>📊 Latest Sensor Reading</h2>
+            <div id="sensorData" class="loading">
+                <div class="spinner"></div>
+                <p>Loading sensor data...</p>
+            </div>
+        </div>
+
+        <div class="data-section">
+            <h2>🤖 AI Predictions</h2>
+            <div id="predictionData" class="loading">
+                <div class="spinner"></div>
+                <p>Loading predictions...</p>
+            </div>
+        </div>
+
+        <footer>
+            <p>Smart Rain IoT System • Backend Running on Port 4000</p>
+            <p style="font-size: 0.85em; margin-top: 10px;">For hardware: Upload ESP32_SENSOR_CODE.ino to your ESP32 dev board</p>
+        </footer>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:4000/api/v1';
+
+        // Check API connection
+        async function checkApiConnection() {
+            try {
+                const response = await axios.get(`${API_URL}/health`);
+                updateApiStatus(true);
+                return true;
+            } catch (error) {
+                updateApiStatus(false);
+                return false;
+            }
+        }
+
+        function updateApiStatus(isConnected) {
+            const statusEl = document.getElementById('apiStatus');
+            if (isConnected) {
+                statusEl.className = 'api-status connected';
+                statusEl.textContent = '✅ Connected to Backend API';
+            } else {
+                statusEl.className = 'api-status disconnected';
+                statusEl.textContent = '❌ Cannot reach Backend API (http://localhost:4000)';
+            }
+        }
+
+        // Load latest sensor data
+        async function loadLatestData() {
+            showAlert('Loading sensor data...', 'info');
+            try {
+                const response = await axios.get(`${API_URL}/sensors/data`, {
+                    headers: { 'Authorization': `Bearer token` }
+                });
+                
+                if (response.data && response.data.length > 0) {
+                    const data = response.data[0];
+                    displaySensorData(data);
+                    showAlert('✅ Data loaded successfully', 'success');
+                } else {
+                    showAlert('No sensor data yet. Send test data first.', 'info');
+                }
+            } catch (error) {
+                showAlert('Error loading data: ' + (error.response?.data?.message || error.message), 'error');
+            }
+        }
+
+        // Send test sensor data
+        async function sendTestData() {
+            showAlert('Sending test data...', 'info');
+            try {
+                const testData = {
+                    deviceId: 'esp32-demo-01',
+                    deviceName: 'Demo Device',
+                    location: 'Test Location',
+                    temperatureC: 25 + Math.random() * 10,
+                    humidityPct: 40 + Math.random() * 40,
+                    pressureHpa: 1000 + Math.random() * 30,
+                    rainAnalog: Math.random() * 100,
+                    rainDetected: Math.random() > 0.5
+                };
+
+                const response = await axios.post(`${API_URL}/sensors/ingest`, testData);
+                
+                displaySensorData(testData);
+                if (response.data.prediction) {
+                    displayPrediction(response.data.prediction);
+                }
+                
+                showAlert('✅ Test data sent successfully!', 'success');
+            } catch (error) {
+                showAlert('Error: ' + (error.response?.data?.message || error.message), 'error');
+            }
+        }
+
+        // Check backend health
+        async function checkHealth() {
+            try {
+                const response = await axios.get(`${API_URL}/health`);
+                showAlert('✅ Backend is healthy: ' + JSON.stringify(response.data), 'success');
+            } catch (error) {
+                showAlert('❌ Backend health check failed', 'error');
+            }
+        }
+
+        // Display sensor data
+        function displaySensorData(data) {
+            const html = `
+                <div class="data-grid">
+                    <div class="data-item">
+                        <div class="data-label">Temperature</div>
+                        <div class="data-value">${data.temperatureC?.toFixed(2) || '--'}°C</div>
+                    </div>
+                    <div class="data-item">
+                        <div class="data-label">Humidity</div>
+                        <div class="data-value">${data.humidityPct?.toFixed(2) || '--'}%</div>
+                    </div>
+                    <div class="data-item">
+                        <div class="data-label">Pressure</div>
+                        <div class="data-value">${data.pressureHpa?.toFixed(2) || '--'} hPa</div>
+                    </div>
+                    <div class="data-item">
+                        <div class="data-label">Rain Level</div>
+                        <div class="data-value">${data.rainAnalog?.toFixed(1) || '--'}%</div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('sensorData').innerHTML = html;
+            
+            // Update status cards
+            document.getElementById('temperature').textContent = (data.temperatureC?.toFixed(1) || '--') + '°C';
+            document.getElementById('humidity').textContent = (data.humidityPct?.toFixed(1) || '--') + '%';
+            document.getElementById('pressure').textContent = (data.pressureHpa?.toFixed(1) || '--') + ' hPa';
+            document.getElementById('rainStatus').textContent = (data.rainAnalog?.toFixed(1) || '--') + '%';
+        }
+
+        // Display prediction
+        function displayPrediction(prediction) {
+            const html = `
+                <div class="data-grid">
+                    <div class="data-item">
+                        <div class="data-label">Rain Predicted</div>
+                        <div class="data-value">${prediction.predictedRain ? '🌧️ Yes' : '☀️ No'}</div>
+                    </div>
+                    <div class="data-item">
+                        <div class="data-label">Rain Probability</div>
+                        <div class="data-value">${(prediction.rainProbability * 100)?.toFixed(1) || '--'}%</div>
+                    </div>
+                    <div class="data-item">
+                        <div class="data-label">1h Forecast</div>
+                        <div class="data-value">${prediction.forecast1h?.toFixed(1) || '--'} mm</div>
+                    </div>
+                    <div class="data-item">
+                        <div class="data-label">2h Forecast</div>
+                        <div class="data-value">${prediction.forecast2h?.toFixed(1) || '--'} mm</div>
+                    </div>
+                </div>
+            `;
+            document.getElementById('predictionData').innerHTML = html;
+        }
+
+        // Show alert
+        function showAlert(message, type = 'info') {
+            const alertBox = document.getElementById('alertBox');
+            alertBox.className = `alert-box ${type}`;
+            alertBox.textContent = message;
+            alertBox.style.display = 'block';
+            
+            if (type === 'success' || type === 'info') {
+                setTimeout(() => { alertBox.style.display = 'none'; }, 3000);
+            }
+        }
+
+        // Clear data
+        function clearData() {
+            document.getElementById('sensorData').innerHTML = '<p>Data cleared</p>';
+            document.getElementById('predictionData').innerHTML = '<p>Predictions cleared</p>';
+            document.getElementById('temperature').textContent = '--°C';
+            document.getElementById('humidity').textContent = '--%';
+            document.getElementById('pressure').textContent = '-- hPa';
+            document.getElementById('rainStatus').textContent = '-- %';
+        }
+
+        // Initialize
+        window.addEventListener('load', async () => {
+            await checkApiConnection();
+            setInterval(checkApiConnection, 5000);
+            loadLatestData();
+        });
+    </script>
+</body>
+</html>

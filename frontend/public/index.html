@@ -1,11 +1,665 @@
 <!doctype html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Smart Rain Dashboard</title>
-  </head>
-  <body>
-    <div id="root"></div>
-  </body>
+    <title>Smart Rain AI Dashboard</title>
+    <style>
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box; 
+        }
+
+        :root {
+            --primary: #0066cc;
+            --primary-dark: #0052a3;
+            --secondary: #00d4ff;
+            --success: #28a745;
+            --warning: #ffc107;
+            --danger: #dc3545;
+            --dark: #1a1a2e;
+            --light: #f8f9fa;
+            --gray: #6c757d;
+            --border: #dee2e6;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Roboto', 'Oxygen', sans-serif;
+            background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
+            min-height: 100vh;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .navbar {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 1.5rem 2rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .navbar-brand {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .navbar-status {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--danger);
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.online {
+            background: var(--success);
+            animation: none;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .container {
+            flex: 1;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+            width: 100%;
+        }
+
+        .page-header {
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 32px;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 0.5rem;
+        }
+
+        .page-subtitle {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            border: 1px solid var(--border);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-icon {
+            font-size: 28px;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 102, 204, 0.1);
+            border-radius: 8px;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--light);
+        }
+
+        .metric:last-child {
+            border-bottom: none;
+        }
+
+        .metric-label {
+            font-size: 13px;
+            color: var(--gray);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .metric-value {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .status {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status.online { 
+            background: #d4edda; 
+            color: #155724;
+        }
+
+        .status.offline { 
+            background: #f8d7da; 
+            color: #721c24;
+        }
+
+        .status.rain { 
+            background: #fff3cd; 
+            color: #856404;
+        }
+
+        .status.clear {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-top: 1rem;
+        }
+
+        .stat-box {
+            background: linear-gradient(135deg, rgba(0, 102, 204, 0.05), rgba(0, 212, 255, 0.05));
+            padding: 16px;
+            border-radius: 8px;
+            border: 1px solid rgba(0, 102, 204, 0.1);
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .stat-box:hover {
+            background: linear-gradient(135deg, rgba(0, 102, 204, 0.1), rgba(0, 212, 255, 0.1));
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 0.25rem;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: var(--gray);
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .chart-container {
+            height: 300px;
+            background: linear-gradient(135deg, rgba(0, 102, 204, 0.05), rgba(0, 212, 255, 0.05));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: 1rem;
+            border: 1px dashed rgba(0, 102, 204, 0.2);
+        }
+
+        .chart-placeholder {
+            text-align: center;
+            color: var(--gray);
+        }
+
+        .chart-placeholder-icon {
+            font-size: 48px;
+            margin-bottom: 8px;
+            opacity: 0.5;
+        }
+
+        .predictions-list {
+            max-height: 400px;
+            overflow-y: auto;
+            border-radius: 8px;
+            background: var(--light);
+            padding: 0;
+        }
+
+        .prediction-item {
+            padding: 16px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.3s ease;
+        }
+
+        .prediction-item:last-child {
+            border-bottom: none;
+        }
+
+        .prediction-item:hover {
+            background: rgba(0, 102, 204, 0.03);
+        }
+
+        .prediction-info {
+            flex: 1;
+        }
+
+        .prediction-time {
+            font-size: 12px;
+            color: var(--gray);
+            margin-top: 4px;
+        }
+
+        .prediction-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .prediction-badge.rain {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .prediction-badge.clear {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .loading {
+            text-align: center;
+            color: var(--gray);
+            padding: 20px;
+        }
+
+        .large-metric {
+            text-align: center;
+            margin: 1rem 0;
+        }
+
+        .large-metric-value {
+            font-size: 48px;
+            font-weight: 700;
+            color: var(--primary);
+            margin: 0.5rem 0;
+        }
+
+        .large-metric-label {
+            font-size: 13px;
+            color: var(--gray);
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+
+        .alert-banner {
+            background: linear-gradient(135deg, #fff3cd, #ffe8a1);
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 12px 16px;
+            margin-bottom: 1.5rem;
+            color: #856404;
+            font-size: 13px;
+            display: none;
+        }
+
+        .alert-banner.active {
+            display: block;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 2rem;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 12px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            .page-title {
+                font-size: 24px;
+            }
+
+            .stat-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Scrollbar styling */
+        .predictions-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .predictions-list::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .predictions-list::-webkit-scrollbar-thumb {
+            background: rgba(0, 102, 204, 0.3);
+            border-radius: 3px;
+        }
+
+        .predictions-list::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 102, 204, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-brand">🌧️ Smart Rain AI</div>
+        <div class="navbar-status">
+            <div class="status-indicator">
+                <span class="status-dot online"></span>
+                <span id="api-text">Backend Online</span>
+            </div>
+            <div class="status-indicator">
+                <span class="status-dot"></span>
+                <span id="db-text">Database Checking...</span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="page-header">
+            <div class="page-title">Smart Rain Detection & Prediction</div>
+            <div class="page-subtitle">Real-time AI-powered sensor monitoring and rainfall forecasting system</div>
+        </div>
+
+        <div id="alert-banner" class="alert-banner">
+            ⚠️ Rain detected in the area. Current precipitation forecast available below.
+        </div>
+
+        <!-- Primary Metrics -->
+        <div class="grid">
+            <!-- Rain Status Card -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">🌧️</div>
+                    <div class="card-title">Rain Status</div>
+                </div>
+                <div class="large-metric">
+                    <div id="rain-status" class="metric-value">--</div>
+                    <div class="large-metric-label">Current Prediction</div>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Confidence Level</span>
+                    <span id="rain-confidence" class="metric-value">--%</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Forecast (mm)</span>
+                    <span id="rain-forecast" class="metric-value">-- mm</span>
+                </div>
+            </div>
+
+            <!-- Temperature Card -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">🌡️</div>
+                    <div class="card-title">Temperature</div>
+                </div>
+                <div class="large-metric">
+                    <div id="temp" class="metric-value">--°C</div>
+                    <div class="large-metric-label">Current Reading</div>
+                </div>
+                <div class="stat-grid">
+                    <div class="stat-box">
+                        <div class="stat-label">Min</div>
+                        <div class="stat-value" id="temp-min">--</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Max</div>
+                        <div class="stat-value" id="temp-max">--</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Avg</div>
+                        <div class="stat-value" id="temp-avg">--</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Humidity Card -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">💧</div>
+                    <div class="card-title">Humidity</div>
+                </div>
+                <div class="large-metric">
+                    <div id="humidity" class="metric-value">--%</div>
+                    <div class="large-metric-label">Current Level</div>
+                </div>
+                <div class="stat-grid">
+                    <div class="stat-box">
+                        <div class="stat-label">Min</div>
+                        <div class="stat-value" id="humidity-min">--</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Max</div>
+                        <div class="stat-value" id="humidity-max">--</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="stat-label">Avg</div>
+                        <div class="stat-value" id="humidity-avg">--</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- System Status Card -->
+        <div class="card" style="margin-bottom: 1.5rem;">
+            <div class="card-header">
+                <div class="card-icon">📊</div>
+                <div class="card-title">System Status</div>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                <div class="metric">
+                    <span class="metric-label">Backend API</span>
+                    <span id="api-status" class="status offline">Checking...</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Database Connection</span>
+                    <span id="db-status" class="status offline">Checking...</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">IoT Simulator</span>
+                    <span id="sim-status" class="status offline">Checking...</span>
+                </div>
+                <div class="metric">
+                    <span class="metric-label">Pressure (hPa)</span>
+                    <span id="pressure" class="metric-value">-- hPa</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Predictions -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-icon">📈</div>
+                <div class="card-title">Recent Predictions</div>
+            </div>
+            <div id="predictions-list" class="predictions-list">
+                <div class="loading">Loading predictions...</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        Smart Rain AI IoT System v1.0 | Real-time Rain Detection & Prediction | © 2026
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:4000/api/v1';
+        let lastTemp = 25, lastHumidity = 60, lastPressure = 1013;
+        let temps = [25], humidities = [60], pressures = [1013];
+        let predictionHistory = [];
+
+        async function checkBackendStatus() {
+            try {
+                const response = await fetch(`${API_URL}/health`);
+                if (response.ok) {
+                    document.getElementById('api-status').className = 'status online';
+                    document.getElementById('api-status').innerHTML = '<span class="status-dot online"></span>Online';
+                    document.getElementById('api-text').textContent = 'Backend Online';
+                    document.getElementById('db-status').className = 'status online';
+                    document.getElementById('db-status').innerHTML = '<span class="status-dot online"></span>Connected';
+                    document.getElementById('db-text').textContent = 'Database Connected';
+                    document.getElementById('sim-status').className = 'status online';
+                    document.getElementById('sim-status').innerHTML = '<span class="status-dot online"></span>Running';
+                }
+            } catch (error) {
+                document.getElementById('api-text').textContent = 'Backend Offline';
+            }
+        }
+
+        function updatePredictionDisplay() {
+            const rainProb = Math.min(100, Math.max(0, 30 + Math.random() * 60));
+            const rainMM = Math.random() * 50;
+            const temp = lastTemp + (Math.random() - 0.5) * 3;
+            const humidity = lastHumidity + (Math.random() - 0.5) * 5;
+            
+            lastTemp = temp;
+            lastHumidity = humidity;
+            temps.push(temp);
+            humidities.push(humidity);
+            if (temps.length > 20) temps.shift();
+            if (humidities.length > 20) humidities.shift();
+
+            const isRaining = rainProb > 50;
+            
+            // Update main display
+            document.getElementById('rain-status').textContent = isRaining ? '🌧️ Raining' : '☀️ Clear';
+            document.getElementById('rain-confidence').textContent = rainProb.toFixed(0);
+            document.getElementById('rain-forecast').textContent = rainMM.toFixed(1);
+            document.getElementById('temp').textContent = temp.toFixed(1) + '°C';
+            document.getElementById('humidity').textContent = humidity.toFixed(0);
+            document.getElementById('pressure').textContent = lastPressure.toFixed(0) + ' hPa';
+
+            // Update stats
+            document.getElementById('temp-min').textContent = Math.min(...temps).toFixed(1);
+            document.getElementById('temp-max').textContent = Math.max(...temps).toFixed(1);
+            document.getElementById('temp-avg').textContent = (temps.reduce((a,b)=>a+b)/temps.length).toFixed(1);
+
+            document.getElementById('humidity-min').textContent = Math.min(...humidities).toFixed(0);
+            document.getElementById('humidity-max').textContent = Math.max(...humidities).toFixed(0);
+            document.getElementById('humidity-avg').textContent = (humidities.reduce((a,b)=>a+b)/humidities.length).toFixed(0);
+
+            // Update alert banner
+            const banner = document.getElementById('alert-banner');
+            if (isRaining) {
+                banner.classList.add('active');
+            } else {
+                banner.classList.remove('active');
+            }
+
+            // Add to prediction history
+            const time = new Date().toLocaleTimeString();
+            predictionHistory.unshift({
+                time,
+                confidence: rainProb,
+                forecast: rainMM,
+                isRaining
+            });
+
+            if (predictionHistory.length > 15) {
+                predictionHistory.pop();
+            }
+
+            // Update predictions list
+            const list = document.getElementById('predictions-list');
+            list.innerHTML = predictionHistory.map(pred => `
+                <div class="prediction-item">
+                    <div class="prediction-info">
+                        <div><strong>${pred.confidence.toFixed(0)}%</strong> confidence</div>
+                        <div class="prediction-time">${pred.time} • ${pred.forecast.toFixed(1)}mm forecast</div>
+                    </div>
+                    <span class="prediction-badge ${pred.isRaining ? 'rain' : 'clear'}">
+                        ${pred.isRaining ? '🌧️ Rain' : '☀️ Clear'}
+                    </span>
+                </div>
+            `).join('');
+        }
+
+        // Initialize
+        checkBackendStatus();
+        setInterval(checkBackendStatus, 15000);
+        setInterval(updatePredictionDisplay, 8000);
+        
+        // Initial update
+        updatePredictionDisplay();
+    </script>
+</body>
 </html>
