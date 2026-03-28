@@ -5,9 +5,6 @@ ai/venv/
 __pycache__/
 *.pyc
 .env
-*.md
-.docx
-*.pdf
 *.log
 ai/models/*.joblib
 frontend/build/
