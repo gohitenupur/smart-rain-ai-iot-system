@@ -10,4 +10,12 @@ async function createAlert({ alertType, message, severity = 'info' }) {
   return rows[0];
 }
 
-module.exports = { createAlert };
+async function listAlerts(limit = 20) {
+  const { rows } = await pool.query(
+    `SELECT * FROM alerts ORDER BY created_at DESC LIMIT $1;`,
+    [limit]
+  );
+  return rows;
+}
+
+module.exports = { createAlert, listAlerts };

@@ -199,14 +199,16 @@ void sendSensorData() {
   statusBusy();
   
   // Create JSON payload
-  StaticJsonDocument<200> doc;
+  StaticJsonDocument<256> doc;
   doc["deviceId"] = DEVICE_ID;
-  doc["temperature"] = temperature;
-  doc["humidity"] = humidity;
-  doc["pressure"] = pressure;
-  doc["rainLevel"] = rainLevel;
-  doc["rainDetected"] = rainDetected;
-  doc["timestamp"] = millis();
+  doc["temperatureC"] = temperature;
+  doc["humidityPct"] = humidity;
+  doc["pressureHpa"] = pressure;
+  doc["rainAnalog"] = rainLevel;
+  // ISO-8601 timestamp required by backend Joi schema
+  char isoTime[30];
+  snprintf(isoTime, sizeof(isoTime), "2024-01-01T00:00:00.000Z"); // replace with NTP if available
+  doc["capturedAt"] = isoTime;
   
   String jsonPayload;
   serializeJson(doc, jsonPayload);
@@ -216,7 +218,7 @@ void sendSensorData() {
   
   // Send HTTP POST request
   HTTPClient http;
-  String url = String(BACKEND_URL) + "/sensors/data";
+  String url = String(BACKEND_URL) + "/sensors/ingest";
   
   http.begin(url);
   http.addHeader("Content-Type", "application/json");

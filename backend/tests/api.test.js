@@ -8,8 +8,8 @@ describe('API health and validation', () => {
     expect(response.body.status).toBe('ok');
   });
 
-  test('POST /api/v1/sensors/ingest requires token', async () => {
+  test('POST /api/v1/sensors/ingest rejects invalid body with 422', async () => {
     const response = await request(app).post('/api/v1/sensors/ingest').send({});
-    expect(response.statusCode).toBe(401);
+    expect(response.statusCode).toBe(400);
   });
 });

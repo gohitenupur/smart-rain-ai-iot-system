@@ -62,7 +62,19 @@ async function ingestSensorData(req, res, next) {
 
 async function getLiveData(req, res, next) {
   try {
-    const rows = await listLatestSensorData(30);
+    const { rows } = await require('../config/db').query(
+      `SELECT
+         sd.*,
+         p.predicted_rain,
+         p.rain_probability,
+         p.forecast_1h_mm,
+         p.forecast_2h_mm,
+         p.forecast_3h_mm
+       FROM sensor_data sd
+       LEFT JOIN predictions p ON p.sensor_data_id = sd.id
+       ORDER BY sd.captured_at DESC
+       LIMIT 30;`
+    );
     return res.json(rows);
   } catch (error) {
     return next(error);
